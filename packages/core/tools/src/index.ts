@@ -695,18 +695,19 @@ export interface Config {
 }
 
 /**
- * Per-scope filter over global tools. Restrictions intersect and do not affect
- * scoped registrations or the reserved PTC mode transport.
+ * Per-scope capability filter. Restrictions intersect; scoped registrations
+ * are exempt by default, and the reserved PTC transport is always exempt.
  */
 export interface ToolRestriction {
-  /** Global tool names that stay visible; everything else is removed. */
+  /** Capability names that stay visible; everything else is removed. */
   readonly allow?: readonly string[]
-  /** Global tool names removed from visibility. */
+  /** Capability names removed from visibility. */
   readonly deny?: readonly string[]
 }
 
 /** One restriction compiled at registration for repeated live-global lookup. */
 interface CompiledToolRestriction {
+  readonly includeScoped: boolean
   readonly allow?: ReadonlySet<string>
   readonly deny?: ReadonlySet<string>
 }
@@ -756,8 +757,9 @@ class ToolLayer implements ScopeLayer {
   }
 
   /** Whether every compiled restriction in this layer admits a global tool name. */
-  admits(name: string): boolean {
+  admits(name: string, wholeScopeOnly = false): boolean {
     for (const filter of this.restrictions.values()) {
+      if (wholeScopeOnly && !filter.includeScoped) continue
       if ((filter.allow !== undefined && !filter.allow.has(name))
         || (filter.deny !== undefined && filter.deny.has(name))) return false
     }
@@ -1096,13 +1098,14 @@ export class ToolRuntime extends Service {
   }
 
   /**
-   * Restrict global tools for the calling agent scope. Empty filters, unknown
-   * names, scope-local names, and reserved transport names fail. Restrictions
-   * intersect; scoped registrations remain visible.
-   * @param filter - global-tool mask: `allow` (keep only) and/or `deny` (remove).
+   * Restrict inherited capabilities, optionally including scope-local tools.
+   * Empty filters, unknown names, and reserved transport names fail. Restrictions
+   * intersect; scope-local registrations are exempt unless includeScoped is true.
+   * @param filter - capability mask: `allow` (keep only) and/or `deny` (remove).
+   * @param options - whether the mask also covers scope-local registrations.
    * @returns the exact disposer that lifts this restriction.
    */
-  restrict(filter: ToolRestriction): () => void {
+  restrict(filter: ToolRestriction, options?: { readonly includeScoped?: boolean }): () => void {
     const scope = scopeOf(this.ctx)
     if (scope === undefined) {
       throw new Error('tools.restrict() requires a scoped context (agent.ctx): a context-global restriction would mask every agent — deny the tool for the intended agent instead')
@@ -1113,13 +1116,15 @@ export class ToolRuntime extends Service {
       throw new Error('tools.restrict({}) is a no-op: pass `allow` and/or `deny` (an empty filter is almost always a materialized-empty-config bug)')
     }
     const compiled: CompiledToolRestriction = {
+      includeScoped: options?.includeScoped === true,
       ...allow !== undefined ? { allow: new Set(allow) } : {},
       ...deny !== undefined ? { deny: new Set(deny) } : {},
     }
     if ([...allow ?? [], ...deny ?? []].includes(RUN_CODE_NAME)) {
       throw new Error(`tools.restrict() cannot name reserved PTC mode presentation transport "${RUN_CODE_NAME}"; restrict end-capability tools instead`)
     }
-    const known = this.view(scope).restrictableNames
+    const view = this.view(scope)
+    const known = options?.includeScoped === true ? view.knownNames : view.restrictableNames
     const unknown = [...allow ?? [], ...deny ?? []].filter(name => !known.has(name))
     if (unknown.length > 0) {
       throw new Error(`tools.restrict() names unknown global tool${unknown.length > 1 ? 's' : ''} ${unknown.map(n => `"${n}"`).join(', ')}; known global tools: ${[...known].sort().join(', ') || '(none)'}`)
@@ -1162,24 +1167,11 @@ export class ToolRuntime extends Service {
   }
 
   /**
-   * Resolve every registry fact one scope needs in one layer traversal. The
-   * visible map applies restrictions to the INHERITED surface, then the
-   * scope's own registrations and the reserved presentation transport; the
-   * other sets retain the pre-restriction facts needed by restriction and
-   * prompt-order validation.
-   *
-   * A restriction filters what a scope inherits — the global layer and every
-   * ancestor layer on its chain — and never what its OWN layer registers.
-   * That exemption is what a per-child capability filter has to keep intact:
-   * the delegation runtime registers a child's structured-output tool into the
-   * child's own layer, and a filter naming the capabilities the child may use
-   * must not strip the machinery it answers through.
-   *
-   * Reading the exempt set as "the global layer" instead of "not mine" held
-   * only while every model-facing tool sat in the host composition. Once
-   * presets moved them onto the agent plane they became an ANCESTOR
-   * contribution, so a child's filter silently stopped constraining anything
-   * it was given.
+   * Resolve registry facts in one layer traversal. Ordinary restrictions mask
+   * inherited capabilities; includeScoped restrictions also mask the scope's
+   * own registrations and descendants' local shadows. The reserved presentation
+   * transport is inserted after capability filtering. Pre-restriction names
+   * remain available for restriction and prompt-order validation.
    * @param scope - the viewing scope (the agent), or undefined for the global view.
    * @returns the complete derived view for that scope.
    */
@@ -1207,12 +1199,12 @@ export class ToolRuntime extends Service {
       // mask an inherited name for everything nested inside it.
       if (layers.every(layer => layer.admits(name))) visible.set(name, definition)
     }
-    // The scope's own registrations last, shadowing an inherited name and
-    // outside the filter above.
+    // Local shadows remain exempt from ordinary inherited-tool masks.
+    const wholeScopeLayers = layers.filter(layer => [...layer.restrictions.values()].some(filter => filter.includeScoped))
     if (own !== undefined) {
       for (const [name, definition] of own.tools.entries()) {
         knownNames.add(name)
-        visible.set(name, definition)
+        if (wholeScopeLayers.length === 0 || wholeScopeLayers.every(layer => layer.admits(name, true))) visible.set(name, definition)
       }
     }
     // Presentation infrastructure is resolved last and outside capability

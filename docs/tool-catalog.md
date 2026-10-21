@@ -39,6 +39,7 @@ This table connects model-visible tool names to the plugin package and service s
 | `@deepseek-ai/dsh-tool-skill` | `skill` | `ctx.workingDirectory`, `ctx.tools`, `ctx.agents`, `ctx.skills` | `tool/call`, `tool/result`, `user/message replacement catalogs via agent.inject()` | - | - |
 | `@deepseek-ai/dsh-tool-session-query` | `session_event_read`, `session_event_search`, `session_event_trace`, `session_search`, `session_trace` | `ctx.tools`, `ctx.systemPrompt`, `ctx.sessionQuery`, `a calling Agent for workspace authority` | `tool/call`, `tool/result` | - | The five read-only tools hide provider cursors and authorize every result from the immutable calling agent session. The package is opt-in; compositions that need enforced deadlines or bounded inline output also mount the generic timeout or spill policies. |
 | `@deepseek-ai/dsh-tool-subagent` | `list_subagent_models`, `subagent` | `ctx.tools`, `ctx.subagents`, `ctx.systemPrompt`, `ctx.llm for model discovery and selected-route validation` | `tool/call`, `tool/result`, `child session events through the chosen provider` | `subagent`, `subagent_fork` | The registered delegation name is the load-time `toolName` config (default `subagent`); the default schema above has model selection off, while the discovery schema is shown as the fixed companion available in an enabled Session. Web presets sample the Plugins preference for each new top-level Session and preserve that decision for its child Sessions; `subagent_fork` remains fixed-route. Each instance selects its backend through `provider` and reads model-selection settings through `modelSelectionSettings`. Every delegation returns a child id promptly; local children accept follow-ups, while external backends report their single execution automatically. |
+| `@deepseek-ai/dsh-tool-subagent-profiles` | `subagent_profiles` | `ctx.tools`, `ctx.subagents`, `ctx.agents`, `ctx.llm`, `ctx.sessionQuery`, `ctx.sessionProjections`, `ctx.workingDirectory`, `ctx.fs` | `tool/call`, `tool/result`, `subagent/profile`, `subagent/profile-route`, `native child Session records` | - | Opt-in Host tool for operator-owned Markdown agents. Single and parallel calls acknowledge native child ids; chains wait with caller delivery. Resume preserves the recorded profile. Project definitions require operator opt-in; configured tool names and physical model routes must exist in Harness. |
 | `@deepseek-ai/dsh-tool-subagent-control` | `interrupt_agent`, `list_agents`, `send_message` | `ctx.tools`, `ctx.subagents`, `ctx.agents and ctx.sessionProjections (list_agents only)` | `tool/call`, `tool/result`, `child session events through ctx.subagents` | - | The globally named discovery, interruption, and local-message tools over managed subagents: provider-bound `tool-subagent` instances register distinct delegation tools, while this package registers `send_message` and `interrupt_agent` once, plus `list_agents` from its separately loaded `/list-agents` plugin (whose catalog rows use the sessionProjections and live Agent registries). |
 | `@deepseek-ai/dsh-tool-jobs` | `job_kill`, `job_list`, `job_output` | `ctx.tools`, `ctx.jobs`, `ctx.systemPrompt` | `tool/call`, `tool/result`, `user/message via agent.inject() for background completion notices` | - | The kind-agnostic background-job controller: background bash commands and PTY sends are read, listed, and killed through the same three tools. Loading the plugin attaches the controller that arms producers' `ctx.jobs.start()`. |
 | `@deepseek-ai/dsh-experimental-tool-agent-team` | `interrupt_agent`, `list_agents`, `send_message`, `spawn_teammate`, `team_task_create`, `team_task_get`, `team_task_list`, `team_task_update`, `wait_agent` | `ctx.tools`, `ctx.systemPrompt`, `ctx.agentTeams`, `an exact live Team member Agent` | `tool/call`, `team/member`, `team/task`, `agent/inbox/spliced`, `user/message on inbox claim`, `tool/result` | - | All nine tools are scoped to implicit Team Leads and durable teammates. The shipped dsh-base bundle keeps the package disabled; the documented Agent Teams profile patch enables it while disabling the legacy continuable-child control names. |
@@ -2119,6 +2120,95 @@ Delegate a self-contained task to a subagent (a separate agent that works in its
 Source: [`packages/subagent/tool-subagent/src/index.ts`](../packages/subagent/tool-subagent/src/index.ts)
 
 The registered delegation name is the load-time `toolName` config (default `subagent`); the default schema above has model selection off, while the discovery schema is shown as the fixed companion available in an enabled Session. Web presets sample the Plugins preference for each new top-level Session and preserve that decision for its child Sessions; `subagent_fork` remains fixed-route. Each instance selects its backend through `provider` and reads model-selection settings through `modelSelectionSettings`. Every delegation returns a child id promptly; local children accept follow-ups, while external backends report their single execution automatically.
+
+<a id="deepseek-aidsh-tool-subagent-profiles"></a>
+
+## `@deepseek-ai/dsh-tool-subagent-profiles`
+
+### `subagent_profiles`
+
+Delegate to named Markdown agents using exactly one mode: agent/task, tasks, or chain. Single and parallel calls return native child ids immediately; chains wait. Resume with agent/task/resume to retain the recorded profile.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "agent": {
+      "type": "string",
+      "description": "Name from the available Markdown agents."
+    },
+    "task": {
+      "type": "string",
+      "description": "Self-contained task; chains replace {previous} with the prior successful final text."
+    },
+    "cwd": {
+      "type": "string",
+      "description": "Initial directory; relative paths use the parent current directory."
+    },
+    "resume": {
+      "type": "string",
+      "description": "Native child Session id belonging to you; single mode only, without cwd."
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "Name from the available Markdown agents."
+          },
+          "task": {
+            "type": "string",
+            "description": "Self-contained task; chains replace {previous} with the prior successful final text."
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Initial directory; relative paths use the parent current directory."
+          }
+        },
+        "required": [
+          "agent",
+          "task"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Start these independent tasks together after all entries pass preflight."
+    },
+    "chain": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "Name from the available Markdown agents."
+          },
+          "task": {
+            "type": "string",
+            "description": "Self-contained task; chains replace {previous} with the prior successful final text."
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Initial directory; relative paths use the parent current directory."
+          }
+        },
+        "required": [
+          "agent",
+          "task"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Run sequentially, substituting {previous}; stop on the first untrusted or unsuccessful result."
+    }
+  },
+  "additionalProperties": false
+}
+```
+
+Source: [`packages/subagent/tool-subagent-profiles/src/index.ts`](../packages/subagent/tool-subagent-profiles/src/index.ts)
+
+Opt-in Host tool for operator-owned Markdown agents. Single and parallel calls acknowledge native child ids; chains wait with caller delivery. Resume preserves the recorded profile. Project definitions require operator opt-in; configured tool names and physical model routes must exist in Harness.
 
 <a id="deepseek-aidsh-tool-subagent-control"></a>
 

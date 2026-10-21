@@ -172,6 +172,28 @@ it('logs detached frozen nested metadata without changing the binding value or l
   }
 })
 
+it('keeps PTC transport while denying local capabilities under a whole-scope restriction', async () => {
+  const { ctx, runtime } = await setup()
+  try {
+    const { scope, agent } = await mintAgentScope(ctx)
+    const calls = registerEcho(scope.ctx)
+    scope.ctx.tools.restrict({ allow: [] }, { includeScoped: true })
+    expect(ctx.tools.schemas(agent).map(tool => tool.name)).toEqual([RUN_CODE_NAME])
+    runtime.behavior = async (request) => {
+      expect(request.bindings[0]!.functions.echo).toBeUndefined()
+      return { logs: [] }
+    }
+    expect((await runCode(ctx, 'return 1', { agent })).isError).toBe(false)
+    const denied = await ctx.tools.execute({
+      agent, signal: testToolSignal, callId: ToolCallId('denied'), name: 'echo', arguments: { value: 'no' },
+    })
+    expect(denied.isError).toBe(true)
+    expect(calls).toEqual([])
+  } finally {
+    await ctx.fiber.dispose()
+  }
+})
+
 describe('mode-aware wire contribution', () => {
   it('rejects an unsupported presentation mode in configuration', () => {
     expect(() => ToolRuntime.Config({ mode: 'both' } as never)).toThrow()

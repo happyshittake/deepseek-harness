@@ -3327,7 +3327,7 @@ export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
 
 - `inject`: `workingDirectory`
 - `refs`: `Volatile` (`@deepseek-ai/cordis`)
-- `source`: [`packages/subagent/subagent/src/index.ts:186`](../packages/subagent/subagent/src/index.ts)
+- `source`: [`packages/subagent/subagent/src/index.ts:189`](../packages/subagent/subagent/src/index.ts)
 
 ```ts config-catalog
 /** Host configuration for continuable subagent capacity. */
@@ -4094,6 +4094,33 @@ export interface PresetSelectionConfig {
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-subagent -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-subagent-profiles -->
+<a id="deepseek-aidsh-tool-subagent-profiles"></a>
+
+## `@deepseek-ai/dsh-tool-subagent-profiles`
+
+- `inject`: `agents` · `llm` · `tools` · `subagents` · `systemPrompt` · `sessionProjections` · `sessionQuery` · `workingDirectory` · `fs`
+- `source`: [`packages/subagent/tool-subagent-profiles/src/index.ts:21`](../packages/subagent/tool-subagent-profiles/src/index.ts)
+
+```ts config-catalog
+/** Operator-owned discovery, fresh-child provider, and optional base preset. */
+export interface Config {
+  /** Unique model-facing tool name. */
+  toolName?: string
+  /** Registered local provider that creates fresh child histories. */
+  provider?: string
+  /** Explicit Host directory replacing $DSH_HOME/agents. */
+  userDirectory?: string
+  /** Permit definitions under the original project's .dsh/agents. */
+  includeProjectAgents?: boolean
+  /** Optional native base preset; omission retains native parent composition. */
+  agentPreset?: string
+  /** Nonnegative safe integer; omission reads the native subagent depth setting. */
+  maxDepth?: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-subagent-profiles -->
 
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-terminal -->
 <a id="deepseek-aidsh-tool-terminal"></a>

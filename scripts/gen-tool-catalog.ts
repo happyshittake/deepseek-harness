@@ -75,6 +75,7 @@ import * as PluginMarketTools from '@deepseek-ai/dsh-plugin-market/tools'
 import SandboxPolicy from '@deepseek-ai/dsh-sandbox-policy'
 import McpResources from '@deepseek-ai/dsh-mcp-resources'
 import * as ToolSubagent from '@deepseek-ai/dsh-tool-subagent'
+import * as ToolSubagentProfiles from '@deepseek-ai/dsh-tool-subagent-profiles'
 import { registerListSubagentModels } from '../packages/subagent/tool-subagent/src/list-models.ts'
 import * as ToolWeb from '@deepseek-ai/dsh-tool-web'
 import WorkflowEngine from '@deepseek-ai/dsh-workflow'
@@ -537,6 +538,24 @@ const TOOL_PACKAGES: ToolPackage[] = [
     },
     note:
       'The registered delegation name is the load-time `toolName` config (default `subagent`); the default schema above has model selection off, while the discovery schema is shown as the fixed companion available in an enabled Session. Web presets sample the Plugins preference for each new top-level Session and preserve that decision for its child Sessions; `subagent_fork` remains fixed-route. Each instance selects its backend through `provider` and reads model-selection settings through `modelSelectionSettings`. Every delegation returns a child id promptly; local children accept follow-ups, while external backends report their single execution automatically.',
+  },
+  {
+    pkg: '@deepseek-ai/dsh-tool-subagent-profiles',
+    dir: 'tool-subagent-profiles',
+    source: 'packages/subagent/tool-subagent-profiles/src/index.ts',
+    requires: ['ctx.tools', 'ctx.subagents', 'ctx.agents', 'ctx.llm', 'ctx.sessionQuery', 'ctx.sessionProjections', 'ctx.workingDirectory', 'ctx.fs'],
+    writes: ['tool/call', 'tool/result', 'subagent/profile', 'subagent/profile-route', 'native child Session records'],
+    async mount(ctx) {
+      await ctx.plugin(SessionStore)
+      await ctx.plugin(AgentRegistry)
+      await ctx.plugin(LlmRuntime)
+      await ctx.plugin(SqliteSessionQueryEngine, { path: ':memory:' })
+      await ctx.plugin(SubagentRuntime)
+      registerCatalogSubagentProvider(ctx, 'spawn')
+      await ctx.plugin(ToolSubagentProfiles)
+    },
+    note:
+      'Opt-in Host tool for operator-owned Markdown agents. Single and parallel calls acknowledge native child ids; chains wait with caller delivery. Resume preserves the recorded profile. Project definitions require operator opt-in; configured tool names and physical model routes must exist in Harness.',
   },
   {
     pkg: '@deepseek-ai/dsh-tool-subagent-control',

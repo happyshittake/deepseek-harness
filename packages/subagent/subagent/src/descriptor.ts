@@ -40,16 +40,18 @@ declare module '@deepseek-ai/dsh-session/types' {
 }
 
 /**
- * The current descriptor format version, stamped into every appended
- * `subagent/descriptor` event and required verbatim by {@link foldSubagentDescriptor}.
- * Supporting another composition input is a deliberate version change, never
- * an implicit extra field.
+ * Descriptor generation for ordinary children and historical one-shot records.
+ * Registered child setup uses {@link SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION};
+ * readers validate each generation's declared fields independently.
  */
 export const SUBAGENT_DESCRIPTOR_VERSION = 3
 
+/** Descriptor generation requiring a registered child initializer. */
+export const SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION = 4
+
 /** Fields shared by every supported `subagent/descriptor` payload. */
 interface SubagentDescriptorBase {
-  /** Descriptor format version ({@link SUBAGENT_DESCRIPTOR_VERSION}). */
+  /** Supported descriptor generation. */
   readonly version: number
   /** Whether the child is a terminal one-shot run or a resumable conversation. */
   readonly mode: 'one-shot' | 'continuable'
@@ -83,6 +85,8 @@ export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBas
   readonly persona?: string
   /** Child tool scoping reapplied on resume. */
   readonly toolFilter?: ToolRestriction
+  /** Required registered initializer, present only in descriptor version 4. */
+  readonly childSetup?: string
 }
 
 /** The supported durable subagent identity and optional continuation composition. */
@@ -108,6 +112,7 @@ const CONTINUABLE_DESCRIPTOR_KEYS = new Set([
   'persona',
   'toolFilter',
 ])
+const SETUP_DESCRIPTOR_KEYS = new Set([...CONTINUABLE_DESCRIPTOR_KEYS, 'childSetup'])
 const TOOL_FILTER_KEYS = new Set(['allow', 'deny'])
 
 /** Whether a persisted JSON value is an object record. */
@@ -173,7 +178,7 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   if (typeof version !== 'number') {
     throw new Error('persisted subagent descriptor version must be a number')
   }
-  if (version !== SUBAGENT_DESCRIPTOR_VERSION) return undefined
+  if (version !== SUBAGENT_DESCRIPTOR_VERSION && version !== SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION) return undefined
 
   const mode = value['mode']
   if (mode !== 'one-shot' && mode !== 'continuable') {
@@ -181,7 +186,8 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   }
   assertKnownKeys(
     value,
-    mode === 'one-shot' ? ONE_SHOT_DESCRIPTOR_KEYS : CONTINUABLE_DESCRIPTOR_KEYS,
+    mode === 'one-shot' ? ONE_SHOT_DESCRIPTOR_KEYS
+      : version === SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION ? SETUP_DESCRIPTOR_KEYS : CONTINUABLE_DESCRIPTOR_KEYS,
     'payload',
   )
   const provider = value['provider']
@@ -189,6 +195,7 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
     throw new Error('persisted subagent descriptor provider must be a string')
   }
   if (mode === 'one-shot') {
+    if (version !== SUBAGENT_DESCRIPTOR_VERSION) throw new Error('child setup descriptors must be continuable')
     const label = optionalString(value, 'label')
     return {
       version: SUBAGENT_DESCRIPTOR_VERSION,
@@ -201,6 +208,10 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   if (typeof label !== 'string') {
     throw new Error('persisted subagent descriptor label must be a string')
   }
+  const childSetup = version === SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION ? optionalString(value, 'childSetup') : undefined
+  if (version === SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION && !childSetup) {
+    throw new Error('persisted subagent descriptor childSetup must be a nonempty string')
+  }
   const agentProvider = optionalString(value, 'agentProvider')
   const agentModel = optionalString(value, 'agentModel')
   const agentReasoningEffort = optionalString(value, 'agentReasoningEffort') as ReasoningEffortId | undefined
@@ -209,10 +220,11 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
     ? parseToolFilter(value['toolFilter'])
     : undefined
   return {
-    version: SUBAGENT_DESCRIPTOR_VERSION,
+    version,
     mode,
     provider,
     label,
+    ...childSetup !== undefined ? { childSetup } : {},
     ...agentProvider !== undefined ? { agentProvider } : {},
     ...agentModel !== undefined ? { agentModel } : {},
     ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
@@ -231,7 +243,8 @@ export function snapshotSubagentDescriptor(
   input: ContinuableSubagentDescriptorInput,
 ): ContinuableSubagentDescriptorData {
   const candidate: ContinuableSubagentDescriptorData = {
-    version: SUBAGENT_DESCRIPTOR_VERSION,
+    version: input.childSetup === undefined ? SUBAGENT_DESCRIPTOR_VERSION : SUBAGENT_CHILD_SETUP_DESCRIPTOR_VERSION,
+    ...input.childSetup !== undefined ? { childSetup: input.childSetup } : {},
     mode: input.mode,
     provider: input.provider,
     label: input.label,
@@ -255,9 +268,8 @@ export function snapshotSubagentDescriptor(
  * composition.
  * @param events - the loaded child session events.
  * @returns the descriptor, or `undefined` when the log has none or its
- *   version is not {@link SUBAGENT_DESCRIPTOR_VERSION} (the child cannot be
- *   classified by this runtime).
- * @throws when a current-version persisted payload does not match its complete
+ *   generation is unsupported (the child cannot be classified by this runtime).
+ * @throws when a supported persisted payload does not match its complete
  *   declared schema.
  */
 export function foldSubagentDescriptor(events: readonly SessionEvent[]): SubagentDescriptorData | undefined {

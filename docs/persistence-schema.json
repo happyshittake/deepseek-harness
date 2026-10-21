@@ -15651,7 +15651,7 @@
       "kind": "event",
       "event": "subagent/descriptor",
       "surface": false,
-      "digest": "b79ada42962cad0190a9d465805260567621fa3a4abd757eb31e6016b52d5ab5",
+      "digest": "566fbf4a25b3832589cd37349104caf7debd74b121f0ffd9d6670a4ea13f41af",
       "schema": {
         "root": 0,
         "nodes": [
@@ -15708,6 +15708,11 @@
               },
               {
                 "name": "agentReasoningEffort",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "childSetup",
                 "type": 3,
                 "optional": true
               },
@@ -15903,6 +15908,211 @@
           {
             "kind": "literal",
             "value": "subagent/model-selection-policy"
+          }
+        ]
+      }
+    },
+    {
+      "key": "event:subagent/profile",
+      "kind": "event",
+      "event": "subagent/profile",
+      "surface": false,
+      "digest": "d7bbaf288e45aec69a137d716c68b0a71bb20584a8485b5e9602add7804fac6f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 9,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 10,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 11,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "description",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "name",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "persona",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "routes",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "source",
+                "type": 5,
+                "optional": false
+              },
+              {
+                "name": "tools",
+                "type": 8,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "array",
+            "element": 4
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "model",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "provider",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "reasoningEffort",
+                "type": 2,
+                "optional": true
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              6,
+              7
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "project"
+          },
+          {
+            "kind": "literal",
+            "value": "user"
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "subagent/profile"
+          }
+        ]
+      }
+    },
+    {
+      "key": "event:subagent/profile-route",
+      "kind": "event",
+      "event": "subagent/profile-route",
+      "surface": false,
+      "digest": "78daebfce54a93d2d5f893689f2905302ed9f0f3fdef93a6bcf178495214037f",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 3,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 4,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "index",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "literal",
+            "value": "subagent/profile-route"
           }
         ]
       }
@@ -22470,6 +22680,11 @@
       ]
     },
     {
+      "digest": "061b8f64aa2d9ec738ac75d69f4d20c9a13054d62d594e0b50db8f4d839221b5",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "0657d3ca5ac4e7bf79b00bcf860b1c7159d01a9da137497221ec2f1776e365f7",
       "names": [
         "packages/core/session/src/types.ts#SessionSeq"
@@ -22852,6 +23067,15 @@
       ],
       "sources": [
         "packages/compaction/compaction-image-offload/src/projection.ts:9"
+      ]
+    },
+    {
+      "digest": "1d3696d5830bfb3bac130fd425c6f5cc7d2d3882c09b32e83a7edc97d46f78c0",
+      "names": [
+        "packages/subagent/subagent/src/descriptor.ts#ContinuableSubagentDescriptorData"
+      ],
+      "sources": [
+        "packages/subagent/subagent/src/descriptor.ts:74"
       ]
     },
     {
@@ -23374,6 +23598,11 @@
       ]
     },
     {
+      "digest": "3e9fee48faf31994e0adc44a5150ca2c1d7480a217bbc4f8ff5e76eb2f4dadad",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "3ee93b06f3a125850337602bcdf155d2538c43a5c944ec55b1b3c365152d6796",
       "names": [],
       "sources": []
@@ -23736,6 +23965,11 @@
       "sources": []
     },
     {
+      "digest": "566fbf4a25b3832589cd37349104caf7debd74b121f0ffd9d6670a4ea13f41af",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "56b7c047694875a843ba020dfea3c8380d54ae4ff88ab349e72004dc21e07c23",
       "names": [],
       "sources": [
@@ -23904,7 +24138,7 @@
         "packages/subagent/subagent/src/descriptor.ts#OneShotSubagentDescriptorData"
       ],
       "sources": [
-        "packages/subagent/subagent/src/descriptor.ts:61"
+        "packages/subagent/subagent/src/descriptor.ts:63"
       ]
     },
     {
@@ -23945,15 +24179,6 @@
       "digest": "62ecb62dc0fe1b5e70217f8a80c39256a40ee3a1917be14e5ca899d20c35f7fd",
       "names": [],
       "sources": []
-    },
-    {
-      "digest": "6487b10ba7542f3c447b1e41a1c6a590b7bfafe0b9b66b49f34028da85bb970f",
-      "names": [
-        "packages/subagent/subagent/src/descriptor.ts#ContinuableSubagentDescriptorData"
-      ],
-      "sources": [
-        "packages/subagent/subagent/src/descriptor.ts:72"
-      ]
     },
     {
       "digest": "6598cd6da253948d6b207c6374a45335804c79b576866d6215649c2d1bc85e25",
@@ -24230,6 +24455,11 @@
       "sources": []
     },
     {
+      "digest": "78daebfce54a93d2d5f893689f2905302ed9f0f3fdef93a6bcf178495214037f",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "79650cfa10aa3c52440328d85e8a25f0ffadc8d7efd784e3c0819d8bb74a1985",
       "names": [],
       "sources": [
@@ -24463,15 +24693,6 @@
       "digest": "8620189c8e33582708ece48fd2d20dc4d57912486a17bdbb9aea4c44f7018062",
       "names": [],
       "sources": []
-    },
-    {
-      "digest": "86d1d0e9cfebb240421187e3dc37fb71cc38a1501885cf32f8f9adef7b0a2bde",
-      "names": [
-        "packages/subagent/subagent/src/descriptor.ts#SubagentDescriptorData"
-      ],
-      "sources": [
-        "packages/subagent/subagent/src/descriptor.ts:89"
-      ]
     },
     {
       "digest": "86e1e384495ee09ac2d60c9db3610f1f1fddac2d248f6f1d6000e78054680219",
@@ -24861,6 +25082,13 @@
       "sources": []
     },
     {
+      "digest": "a361fc118a02dfc4201e1702714549ea5707953f4992ee302062ca1ecb9681b1",
+      "names": [],
+      "sources": [
+        "packages/subagent/tool-subagent-profiles/src/state.ts:36"
+      ]
+    },
+    {
       "digest": "a3a259a1aa5401af786ce08c4a8419681d3000d73467991b5fc563389bc4ebd2",
       "names": [],
       "sources": []
@@ -25070,6 +25298,15 @@
       "sources": []
     },
     {
+      "digest": "ae7397e49196a1ec578a950b76347eae3f6a88dfb1b1f180841887b9bbfa7967",
+      "names": [
+        "packages/subagent/subagent/src/descriptor.ts#SubagentDescriptorData"
+      ],
+      "sources": [
+        "packages/subagent/subagent/src/descriptor.ts:93"
+      ]
+    },
+    {
       "digest": "aec150797b655c5f15ebb7a501454b0c208fbaccec9ace49d7de2171fc02f47d",
       "names": [],
       "sources": []
@@ -25245,11 +25482,6 @@
     },
     {
       "digest": "b79641a9d25e756636dc0c706fdf3c4583ccb7d4920e009e6e86c0759cf4de4c",
-      "names": [],
-      "sources": []
-    },
-    {
-      "digest": "b79ada42962cad0190a9d465805260567621fa3a4abd757eb31e6016b52d5ab5",
       "names": [],
       "sources": []
     },
@@ -25443,6 +25675,11 @@
       ]
     },
     {
+      "digest": "c6bd6f9fb6c3a21433f1b25dfbc8ad0830148e15ff903a6111c1646bd4590780",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "c748fb42c80a120038a8c587af80ec39924803c401364db11c8974d5bf6d0262",
       "names": [],
       "sources": []
@@ -25461,6 +25698,15 @@
       "digest": "ca085dba2c877feceebf3c62f9d39c6c2a4d2314d97b94b3927a780fe8fe2bb2",
       "names": [],
       "sources": []
+    },
+    {
+      "digest": "ca3b2fd49f26bb8f67ee92d385327b8f001892fba1f0966ff6c7c34d814a24f3",
+      "names": [
+        "packages/subagent/tool-subagent-profiles/src/types.ts#SubagentProfileSnapshot"
+      ],
+      "sources": [
+        "packages/subagent/tool-subagent-profiles/src/types.ts:40"
+      ]
     },
     {
       "digest": "ca59530d1a4f3e191b4032bc4a20eded0d827db8b5a7efb27b3af9e9b456c6f2",
@@ -25572,6 +25818,16 @@
       "sources": []
     },
     {
+      "digest": "d756883918929213859e9d8e4ef8d20c31787ca8585c30ffc7125016b2fd0455",
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "d7bbaf288e45aec69a137d716c68b0a71bb20584a8485b5e9602add7804fac6f",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "d85590a5675c6e2fd8164e5792a6cceac714605b8ac228adae5ee668facb1490",
       "names": [],
       "sources": []
@@ -25628,6 +25884,11 @@
       "sources": [
         "packages/core/tools/src/ptc.ts:15"
       ]
+    },
+    {
+      "digest": "dbbeaef263e700695d2d1c32604c63e554c006a009c774fcae07305d0dd877c5",
+      "names": [],
+      "sources": []
     },
     {
       "digest": "dbdafceb9a900183cccc80596498d386f3bf7bddead2b8cfde68453aa4739edc",
@@ -25913,10 +26174,12 @@
     {
       "digest": "f09e5e7acf5ff5ccd193ff2eeec015fa2ff7c29d98bc465f8c3302058d47e29b",
       "names": [
-        "packages/api/session-controller/src/types.ts#ModelSelection"
+        "packages/api/session-controller/src/types.ts#ModelSelection",
+        "packages/subagent/tool-subagent-profiles/src/types.ts#ProfileRoute"
       ],
       "sources": [
-        "packages/api/session-controller/src/types.ts:101"
+        "packages/api/session-controller/src/types.ts:101",
+        "packages/subagent/tool-subagent-profiles/src/types.ts:7"
       ]
     },
     {

@@ -3103,6 +3103,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the exact Cordis effect disposer.',
       },
       {
+        signature: 'registerChildSetup(key: string, handler: SubagentChildSetupHandler): () => void',
+        description: 'Register an unpublished local child initializer, required again on cold resume.',
+        parameters: [{ name: 'key', description: 'stable initializer name stored in child descriptors.' }, { name: 'handler', description: 'setup that persists its own feature data before publication.' }],
+        returns: 'the effect-owned registration disposer.',
+      },
+      {
         signature: 'getProvider(name: string): SubagentProvider | undefined',
         description: 'Look up a provider by name.',
         parameters: [{ name: 'name', description: 'the provider name.' }],
@@ -3429,9 +3435,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the exact disposer that unregisters the tool.',
       },
       {
-        signature: 'restrict(filter: ToolRestriction): () => void',
-        description: 'Restrict global tools for the calling agent scope. Empty filters, unknown names, scope-local names, and reserved transport names fail. Restrictions intersect; scoped registrations remain visible.',
-        parameters: [{ name: 'filter', description: 'global-tool mask: `allow` (keep only) and/or `deny` (remove).' }],
+        signature: 'restrict(filter: ToolRestriction, options?: { readonly includeScoped?: boolean }): () => void',
+        description: 'Restrict inherited capabilities, optionally including scope-local tools. Empty filters, unknown names, and reserved transport names fail. Restrictions intersect; scope-local registrations are exempt unless includeScoped is true.',
+        parameters: [{ name: 'filter', description: 'capability mask: `allow` (keep only) and/or `deny` (remove).' }, { name: 'options', description: 'whether the mask also covers scope-local registrations.' }],
         returns: 'the exact disposer that lifts this restriction.',
       },
       {
@@ -7823,7 +7829,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubagentActivationSpec',
-    declaration: 'export interface SubagentActivationSpec {\n    readonly provider: string;\n    readonly label: string;\n    readonly childId?: SessionId;\n    readonly request: Omit<SubagentStartRequest, \'label\' | \'signal\'>;\n    readonly signal: AbortSignal;\n    readonly delivery: \'parent\' | \'caller\';\n}',
+    declaration: 'export interface SubagentActivationSpec {\n    readonly provider: string;\n    readonly label: string;\n    readonly childId?: SessionId;\n    readonly childSetup?: SubagentChildSetup;\n    readonly request: Omit<SubagentStartRequest, \'label\' | \'signal\'>;\n    readonly signal: AbortSignal;\n    readonly delivery: \'parent\' | \'caller\';\n}',
   },
   {
     name: 'SubagentCapabilities',
@@ -7836,6 +7842,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SubagentCatalogRow',
     declaration: 'export type SubagentCatalogRow = {\n    readonly id: SessionId;\n    readonly activity: \'running\' | \'inactive\';\n} & ({\n    readonly mode: \'one-shot\';\n    readonly label?: string;\n} | {\n    readonly mode: \'external\';\n    readonly label?: string;\n} | {\n    readonly mode: \'continuable\';\n    readonly label: string;\n});',
+  },
+  {
+    name: 'SubagentChildSetup',
+    declaration: 'export interface SubagentChildSetup {\n    readonly key: string;\n    readonly data: JsonValue;\n}',
+  },
+  {
+    name: 'SubagentChildSetupHandler',
+    declaration: 'export type SubagentChildSetupHandler = (childCtx: Context, child: Agent, input: {\n    readonly kind: \'startup\';\n    readonly data: JsonValue;\n} | {\n    readonly kind: \'resume\';\n}, signal: AbortSignal) => void | Promise<void>;',
   },
   {
     name: 'SubagentDescendantListEntry',
@@ -8315,7 +8329,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolRuntime',
-    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
+    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    restrict(filter: ToolRestriction, options?: {\n        readonly includeScoped?: boolean;\n    }): () => void;\n    guard(guard: ToolGuard): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
   },
   {
     name: 'ToolRuntimeScheduler',

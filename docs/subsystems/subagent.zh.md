@@ -2,7 +2,7 @@
 
 [English](subagent.md) | 中文
 
-统一的 activation API 管理本地会话和外部执行。
+统一的 activation API 管理本地会话和外部执行。可选的 [Markdown 配置工具](../../packages/subagent/tool-subagent-profiles/README.zh.md) 注册原生子级初始化，用于持久化角色指令、能力限制与物理路由选择。读取时必需的 `subagent/profile` 快照及完整 `subagent/profile-route` 索引由仅 Host 的 `subagentProfile` 投影折叠；无关 Session 没有配置快照。
 
 ## 能力与 activation 请求
 
@@ -26,6 +26,8 @@ interface SubagentCapabilities {
 }
 ```
 
+`SubagentChildSetup` 包含稳定的处理器 `key: string` 与启动 `data: JsonValue`。`registerChildSetup(key, handler)` 返回注册释放器。处理器接收未发布的子级 context、Agent、启动时的 `{ kind: 'startup', data }` 或恢复时的 `{ kind: 'resume' }`，以及必须转发的初始化取消信号；返回 `void | Promise<void>`。仅本地后端支持此选项；缺失处理器时拒绝启动与恢复。
+
 ```ts type-equiv
 /** One managed child execution and its result delivery policy. */
 interface SubagentActivationSpec {
@@ -35,6 +37,8 @@ interface SubagentActivationSpec {
   readonly label: string
   /** Optional reserved identity for a local child; external backends allocate their own ids. */
   readonly childId?: SessionId
+  /** Local child initializer; its key is required on every cold resume. */
+  readonly childSetup?: SubagentChildSetup
   /** Task, parent, and backend-supported execution options. */
   readonly request: Omit<SubagentStartRequest, 'label' | 'signal'>
   /** Cancellation before publication; callers own later cancellation through dispose. */
@@ -585,6 +589,14 @@ listDescendants(rootSessionId: SessionId, signal?: AbortSignal): Promise<Subagen
  * @returns the exact Cordis effect disposer.
  */
 registerProvider(provider: SubagentProvider): () => void
+
+/**
+ * Register an unpublished local child initializer, required again on cold resume.
+ * @param key - stable initializer name stored in child descriptors.
+ * @param handler - setup that persists its own feature data before publication.
+ * @returns the effect-owned registration disposer.
+ */
+registerChildSetup(key: string, handler: SubagentChildSetupHandler): () => void
 
 /**
  * Look up a provider by name.

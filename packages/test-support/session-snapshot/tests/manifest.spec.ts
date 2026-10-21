@@ -165,6 +165,13 @@ describe('snapshot manifest', () => {
     })
   })
 
+  it('pins physical child routes only for the headless controller', () => {
+    expect(parseSnapshotManifest('version: 1\nprofile: headless\nheader:\n  class: profiles\n  childRequestHeaders: [1]\n').header)
+      .toEqual({ class: 'profiles', childRequestHeaders: [1] })
+    expect(() => parseSnapshotManifest('version: 1\nprofile: sdk\nheader:\n  class: profiles\n  childRequestHeaders: [1]\n'))
+      .toThrow('manifest.header.childRequestHeaders is supported only by the headless controller')
+  })
+
   it.each([
     ['', 'manifest must be a mapping'],
     ['version: 2\nprofile: acp\n', 'manifest.version must equal 1'],
@@ -175,6 +182,7 @@ describe('snapshot manifest', () => {
     ['version: 1\nprofile: acp\nheader: {}\n', 'manifest.header.class must be a lower-kebab-case name'],
     ['version: 1\nprofile: acp\nheader:\n  class: base\n  pin: false\n', 'manifest.header.pin must equal true when present'],
     ['version: 1\nprofile: acp\nheader:\n  class: base\n  childToolSchemas: [1, 1]\n', 'manifest.header.childToolSchemas must be an array of unique positive integers'],
+    ['version: 1\nprofile: headless\nheader:\n  class: base\n  childRequestHeaders: [1, 1]\n', 'manifest.header.childRequestHeaders must be an array of unique positive integers'],
     ['version: 1\nprofile: acp\nheader:\n  class: base\n  changes: -1\n', 'manifest.header.changes must be a non-negative integer'],
     ['version: 1\nprofile: acp\nheader:\n  class: base\n  promptChanges: 1.5\n', 'manifest.header.promptChanges must be a non-negative integer'],
     ['version: 1\nprofile: acp\nheader:\n  class: base\n  systemPromptSource: ../bad\n', 'manifest.header.systemPromptSource must be a lower-kebab-case name or corpus-relative path'],

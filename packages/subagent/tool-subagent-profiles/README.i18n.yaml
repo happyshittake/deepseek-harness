@@ -1,0 +1,55 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/subagent/tool-subagent-profiles/README.md
+/:
+  en: b7678b923c2c6fd5
+  zh: 754c39ce4356b2c5
+/markdown-subagent-profiles:
+  en: 256cdb4488e555ca
+  zh: 853265679cdcd0c9
+/markdown-subagent-profiles/summary:
+  en: 9ba10643320b2a67
+  zh: 48a3188fa99663b4
+/markdown-subagent-profiles/table-of-contents:
+  en: 9a1869545e132ad5
+  zh: 9929684f3499a45e
+/markdown-subagent-profiles/configuration-and-definitions:
+  en: e8d0bb1d4e4c670c
+  zh: cef0e9639fd83464
+/markdown-subagent-profiles/delegation-and-recovery:
+  en: 34c12cb8078f309c
+  zh: a9ad3a2615e2a4f1
+/markdown-subagent-profiles/dev-note:
+  en: 91f012b10ae4523a
+  zh: c0d329250f8fb352
+/markdown-subagent-profiles/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/markdown-subagent-profiles/model-experience/catalog-guidance:
+  en: bc2a91b763645fe8
+  zh: c3a586f23a42d211
+/markdown-subagent-profiles/model-experience/catalog-guidance/what-the-model-sees:
+  en: c5a394de809af4d7
+  zh: cac63b23423cdef1
+/markdown-subagent-profiles/model-experience/catalog-guidance/token-effect:
+  en: d69d5be42e53c230
+  zh: 18824cdde16244a1
+/markdown-subagent-profiles/model-experience/catalog-guidance/kv-cache-effect:
+  en: 4dfd998dedb5743b
+  zh: 537d4d4bad6ac14c
+/markdown-subagent-profiles/model-experience/tool-schemas-and-results:
+  en: cadc497841430a21
+  zh: af4cc374d7d16917
+/markdown-subagent-profiles/model-experience/tool-schemas-and-results/what-the-model-sees:
+  en: 6d4509d1e780e181
+  zh: af3b5c312c293a34
+/markdown-subagent-profiles/model-experience/tool-schemas-and-results/token-effect:
+  en: 06366caf718fa927
+  zh: b63a617cb784b183
+/markdown-subagent-profiles/model-experience/tool-schemas-and-results/kv-cache-effect:
+  en: c167910e301fd026
+  zh: de0f6177d98508d6
+/markdown-subagent-profiles/known-limitations-and-deferred-work:
+  en: 95f433a4f9397f2f
+  zh: cad576f7e3e18b89

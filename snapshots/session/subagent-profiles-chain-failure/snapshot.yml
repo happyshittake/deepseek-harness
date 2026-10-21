@@ -1,0 +1,10 @@
+version: 1
+scenario: subagent-profiles-chain-failure
+profile: headless
+composition: subagent-profiles
+recording: authored
+header:
+  class: profiles
+  childSystemPrompts: [1]
+  childToolSchemas: [1]
+  childRequestHeaders: [1]

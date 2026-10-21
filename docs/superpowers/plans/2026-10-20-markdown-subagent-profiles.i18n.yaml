@@ -1,0 +1,40 @@
+# Bilingual-pair consistency record for 2026-10-20-markdown-subagent-profiles.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/superpowers/plans/2026-10-20-markdown-subagent-profiles.md
+/markdown-subagent-profiles-implementation-plan:
+  en: 11b112922918c2e4
+  zh: e4bdf2f542d045ad
+/markdown-subagent-profiles-implementation-plan/global-constraints:
+  en: bb608d774bde4ee0
+  zh: 107169365e9be49a
+/markdown-subagent-profiles-implementation-plan/review-focus:
+  en: 6932c559bdb6e4bd
+  zh: 2610967f3108cff6
+/markdown-subagent-profiles-implementation-plan/file-ownership:
+  en: 177b657a3500e38f
+  zh: 221a201abcbb06c1
+/markdown-subagent-profiles-implementation-plan/file-ownership/task-1-restorable-native-child-setup:
+  en: 122f09a21c50e8fc
+  zh: f8dd8a46b771294b
+/markdown-subagent-profiles-implementation-plan/file-ownership/task-2-enforce-profile-restrictions-on-the-entire-child-scope:
+  en: 1e223727290a6254
+  zh: e6990e29fe981472
+/markdown-subagent-profiles-implementation-plan/file-ownership/task-3-add-the-optional-package-and-markdown-discovery:
+  en: c2eeb711817b9ef7
+  zh: bc0edd29bd467714
+/markdown-subagent-profiles-implementation-plan/file-ownership/task-4-persist-restore-and-route-a-profile-child:
+  en: be8d0e85b3b9b614
+  zh: 1785234ae1f46a05
+/markdown-subagent-profiles-implementation-plan/file-ownership/task-5-expose-single-parallel-chain-and-authorized-resume:
+  en: 9738ca322bb7801b
+  zh: 532e30d662e0f079
+/markdown-subagent-profiles-implementation-plan/file-ownership/task-6-recorded-sessions-sdk-projections-and-release-checks:
+  en: 015d8bc059c867ff
+  zh: 0d6ca252ff61367a
+/markdown-subagent-profiles-implementation-plan/existing-verification-findings:
+  en: 8a22a68c429da8f5
+  zh: e84c6c1d124622de
+/markdown-subagent-profiles-implementation-plan/execution-choice:
+  en: d3899333e8347113
+  zh: 10f974af192644cb

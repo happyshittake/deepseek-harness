@@ -1,0 +1,13 @@
+version: 1
+scenario: subagent-profiles
+profile: headless
+composition: subagent-profiles
+recording: authored
+header:
+  class: profiles
+  pin: true
+  childSystemPrompts: [1]
+  childToolSchemas: [1]
+  childRequestHeaders: [1]
+workspace:
+  final: true

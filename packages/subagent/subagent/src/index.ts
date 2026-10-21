@@ -55,6 +55,7 @@ import type {
   ContinuableCreateRequest,
   ContinuableCreateSpec,
   SubagentCapabilities,
+  SubagentChildSetupHandler,
   SubagentActivation,
   SubagentActivationSpec,
   SubagentInterruptAuthority,
@@ -85,6 +86,8 @@ export type {
   ContinuableCreateRequest,
   ContinuableCreateSpec,
   SubagentCapabilities,
+  SubagentChildSetup,
+  SubagentChildSetupHandler,
   SubagentActivation,
   SubagentActivationSpec,
   SubagentInterruptAuthority,
@@ -198,6 +201,7 @@ export class SubagentRuntime extends TypertRemoteService {
   })
   static inject = ['workingDirectory']
   private providers = new Map<string, SubagentProvider>()
+  private childSetups = new Map<string, SubagentChildSetupHandler>()
   private manager: SubagentManager | undefined
   /**
    * The contained lifecycle-edge publisher. Built here because scoped dispatch
@@ -216,6 +220,7 @@ export class SubagentRuntime extends TypertRemoteService {
           return provider.start(request)
         },
         prepareContinuable: (name, request) => this.prepareContinuable(name, request),
+        resolveChildSetup: key => this.requireChildSetup(key),
         observeActivation: (provider, childId, parent) => this.observeActivation(provider, childId, parent),
       }, () => this.config.maxActiveSubagents.get())
       this.manager = manager
@@ -268,6 +273,9 @@ export class SubagentRuntime extends TypertRemoteService {
    */
   async startActivation(spec: SubagentActivationSpec): Promise<SubagentActivation> {
     const provider = this.expectProvider(spec.provider)
+    if (spec.childSetup !== undefined && provider.prepareContinuable === undefined) {
+      throw new SubagentError('registered child setup requires a local backend', 'UNSUPPORTED_CAPABILITY')
+    }
     if (spec.childId !== undefined && provider.prepareContinuable === undefined) {
       throw new SubagentError('reserved child ids require a local backend', 'UNSUPPORTED_CAPABILITY')
     }
@@ -563,6 +571,31 @@ export class SubagentRuntime extends TypertRemoteService {
       // repository's fail-loud registration semantics.
       this.ctx.emit('subagent/provider-added', provider)
     }.bind(this), 'subagents.registerProvider()')
+  }
+
+  /**
+   * Register an unpublished local child initializer, required again on cold resume.
+   * @param key - stable initializer name stored in child descriptors.
+   * @param handler - setup that persists its own feature data before publication.
+   * @returns the effect-owned registration disposer.
+   */
+  registerChildSetup(key: string, handler: SubagentChildSetupHandler): () => void {
+    // oxlint-disable-next-line typescript/no-misused-promises -- registration and disposal are synchronous.
+    return this.ctx.effect(() => {
+      if (this.childSetups.has(key)) {
+        throw new SubagentError(`child setup "${key}" is already registered`, 'DUPLICATE_CHILD_SETUP')
+      }
+      this.childSetups.set(key, handler)
+      return () => { this.childSetups.delete(key) }
+    }, 'subagents.registerChildSetup()')
+  }
+
+  private requireChildSetup(key: string): SubagentChildSetupHandler {
+    const handler = this.childSetups.get(key)
+    if (handler === undefined) {
+      throw new SubagentError(`child setup "${key}" is unavailable; mount its owning plugin before restoring this child`, 'CHILD_SETUP_UNAVAILABLE')
+    }
+    return handler
   }
 
   /**

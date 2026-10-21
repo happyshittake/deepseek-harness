@@ -2,7 +2,7 @@
 
 English | [中文](subagent.zh.md)
 
-The unified activation API manages local conversations and external executions.
+The unified activation API manages local conversations and external executions. The optional [Markdown profiles tool](../../packages/subagent/tool-subagent-profiles/README.md) registers native child setup for persisted persona, capability restrictions, and physical route selection. Its required-on-read `subagent/profile` snapshot and complete `subagent/profile-route` index are folded by the host-only `subagentProfile` projection; unrelated Sessions have no profile snapshot.
 
 ## Capabilities and activation requests
 
@@ -26,6 +26,8 @@ interface SubagentCapabilities {
 }
 ```
 
+`SubagentChildSetup` contains a stable handler `key: string` and startup `data: JsonValue`. `registerChildSetup(key, handler)` returns the registration disposer. A handler receives the unpublished child context, Agent, either `{ kind: 'startup', data }` or `{ kind: 'resume' }`, and the initialization cancellation signal that asynchronous setup must forward, returning `void | Promise<void>`. Only local backends support this option; missing handlers reject start and restoration.
+
 ```ts type-equiv
 /** One managed child execution and its result delivery policy. */
 interface SubagentActivationSpec {
@@ -35,6 +37,8 @@ interface SubagentActivationSpec {
   readonly label: string
   /** Optional reserved identity for a local child; external backends allocate their own ids. */
   readonly childId?: SessionId
+  /** Local child initializer; its key is required on every cold resume. */
+  readonly childSetup?: SubagentChildSetup
   /** Task, parent, and backend-supported execution options. */
   readonly request: Omit<SubagentStartRequest, 'label' | 'signal'>
   /** Cancellation before publication; callers own later cancellation through dispose. */
@@ -583,6 +587,14 @@ listDescendants(rootSessionId: SessionId, signal?: AbortSignal): Promise<Subagen
  * @returns the exact Cordis effect disposer.
  */
 registerProvider(provider: SubagentProvider): () => void
+
+/**
+ * Register an unpublished local child initializer, required again on cold resume.
+ * @param key - stable initializer name stored in child descriptors.
+ * @param handler - setup that persists its own feature data before publication.
+ * @returns the effect-owned registration disposer.
+ */
+registerChildSetup(key: string, handler: SubagentChildSetupHandler): () => void
 
 /**
  * Look up a provider by name.

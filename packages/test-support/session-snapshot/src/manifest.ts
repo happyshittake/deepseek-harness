@@ -23,6 +23,8 @@ export interface SnapshotHeaderManifest {
   childSystemPrompts?: number[]
   /** Child fixture indexes that own distinct tool-schema sidecars. */
   childToolSchemas?: number[]
+  /** Headless child roles whose route/header sequence is pinned by their own selected Session fixture. */
+  childRequestHeaders?: number[]
   /** Legitimate changed-header count after the initial request header. */
   changes?: number
   /** Legitimate later `system/message` count (replacements or in-history appends) after the initial system prompt. */
@@ -251,6 +253,7 @@ export function parseSnapshotManifest(source: string, path = 'snapshot.yml'): Sn
         'toolSchemasSource',
         'childSystemPrompts',
         'childToolSchemas',
+        'childRequestHeaders',
         'changes',
         'promptChanges',
       ], 'manifest.header')
@@ -261,6 +264,9 @@ export function parseSnapshotManifest(source: string, path = 'snapshot.yml'): Sn
         if (value[field] !== undefined && (!Number.isInteger(value[field]) || Number(value[field]) < 0)) {
           throw new Error(`manifest.header.${field} must be a non-negative integer`)
         }
+      }
+      if (value.childRequestHeaders !== undefined && root.profile !== 'headless') {
+        throw new Error('manifest.header.childRequestHeaders is supported only by the headless controller')
       }
       header = {
         class: name(value.class, 'manifest.header.class'),
@@ -277,6 +283,9 @@ export function parseSnapshotManifest(source: string, path = 'snapshot.yml'): Sn
         ...(value.childToolSchemas === undefined
           ? {}
           : { childToolSchemas: positiveIndexes(value.childToolSchemas, 'manifest.header.childToolSchemas') }),
+        ...(value.childRequestHeaders === undefined
+          ? {}
+          : { childRequestHeaders: positiveIndexes(value.childRequestHeaders, 'manifest.header.childRequestHeaders') }),
         ...(value.changes === undefined ? {} : { changes: Number(value.changes) }),
         ...(value.promptChanges === undefined ? {} : { promptChanges: Number(value.promptChanges) }),
       }

@@ -1,0 +1,7 @@
+
+- insert:
+    - id: markdown-profiles
+      name: '../../../packages/subagent/tool-subagent-profiles/src/index.ts'
+      config:
+        userDirectory: .agents/native-profiles
+        maxDepth: 1

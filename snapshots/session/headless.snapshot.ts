@@ -920,6 +920,15 @@ async function verifyHeaders(scenario: HeadlessScenario, actualLogs: readonly Se
 
   const childPrompts = new Map<number, string>()
   const childSchemas = new Map<number, unknown[][]>()
+  const childRequestHeaders = new Map<number, unknown[]>()
+  const fixtureFiles = await readdir(scenario.dir)
+  for (const index of scenario.manifest.header.childRequestHeaders ?? []) {
+    const files = sessionFixtureNames(fixtureFiles)
+    const file = files[index]
+    if (file === undefined) throw new Error(`${scenario.name}: missing child header role ${index}`)
+    const fixture = await readFile(join(scenario.dir, file), 'utf8')
+    childRequestHeaders.set(index, normalizedHeaders(fixture, fixtureContext(fixture)))
+  }
   for (const index of scenario.manifest.header.childSystemPrompts ?? []) {
     childPrompts.set(index, await readFile(join(scenario.dir, `system-prompt.${index}.expected.md`), 'utf8'))
   }
@@ -931,6 +940,8 @@ async function verifyHeaders(scenario: HeadlessScenario, actualLogs: readonly Se
   for (const [logIndex, log] of actualLogs.entries()) {
     const headers = normalizedHeaders(log.content, ctx)
     const prompts = normalizedSystemPrompts(log.content, ctx)
+    const ownHeaders = childRequestHeaders.get(logIndex)
+    if (ownHeaders !== undefined) expect(headers, `${scenario.name}: child header count`).toHaveLength(ownHeaders.length)
     if (headers.length > 0) {
       expect(systemPromptPrecedesRequests(log.content), `${scenario.name}: a system/message precedes the first request/header`).toBe(true)
       expect(prompts.length, `${scenario.name}: system/message count`)
@@ -938,7 +949,7 @@ async function verifyHeaders(scenario: HeadlessScenario, actualLogs: readonly Se
     }
     for (const [index, header] of headers.entries()) {
       const selectedSchemas = childSchemas.get(logIndex)?.[index]
-      const base = reconstructed[index] ?? reconstructed[0]
+      const base = ownHeaders?.[index] ?? reconstructed[index] ?? reconstructed[0]
       const expected = selectedSchemas === undefined ? base : { ...base as JsonObject, tools: selectedSchemas }
       expect(header, `${scenario.name}: request header ${index + 1}`).toEqual(expected)
     }

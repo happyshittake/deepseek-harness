@@ -7,6 +7,7 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
 import { isAbsolute, resolve } from 'node:path'
 import type {} from '@deepseek-ai/dsh-working-directory'
 import type { Context } from '@deepseek-ai/cordis'
@@ -34,7 +35,7 @@ import { isAdjacentAgentSendMessageTool } from './internal.ts'
 import type { ActivationObserver } from './lifecycle.ts'
 import type {
   ContinuableCreateRequest, ContinuableCreateSpec, SubagentInterruptAuthority,
-  SubagentActivationSpec, SubagentActivation, SubagentStartRequest, SubagentRun,
+  SubagentActivationSpec, SubagentActivation, SubagentStartRequest, SubagentRun, SubagentChildSetupHandler,
   SubagentSendMessageOptions, SubagentResult, ResolvedSubagentStartRequest,
 } from './types.ts'
 import { attachStructuredRuntime } from './structured.ts'
@@ -58,6 +59,7 @@ type ChildDeliveryOptions =
 
 /** Package-private hooks supplied by the owning service. */
 interface SubagentHost {
+  resolveChildSetup(key: string): SubagentChildSetupHandler
   startExternal(name: string, request: ResolvedSubagentStartRequest): Promise<SubagentRun>
   /** Resolve one provider's detached continuable-creation contribution. */
   prepareContinuable(name: string, request: ContinuableCreateRequest): Promise<ContinuableCreateSpec>
@@ -97,6 +99,7 @@ type MaterializeInputs = MaterializeBase & (
     }
     agentOptions: AgentOptions
     composition: ChildComposition
+    childSetup?: { key: string; handler: SubagentChildSetupHandler; input: Parameters<SubagentChildSetupHandler>[2] } | undefined
     outputSchema?: ObjectJsonSchema | undefined
   }
   | { kind: 'external'; start: (signal: AbortSignal) => Promise<SubagentRun> }
@@ -387,6 +390,10 @@ export class SubagentManager {
     const childDepth = resolveChildDepth(parent, request.maxDepth)
     // Snapshot before any await: invalid descriptor JSON rejects the call
     // before a child exists, and the detached value is what reaches the log.
+    const setupKey = spec.childSetup?.key
+    const setupHandler = setupKey === undefined ? undefined : this.host.resolveChildSetup(setupKey)
+    const setupData = spec.childSetup === undefined ? undefined : snapshotJsonValue(spec.childSetup.data)
+    if (spec.childSetup !== undefined && setupData === undefined) throw new Error('child setup data is not losslessly JSON-serializable')
     const agentOptions = resolveChildAgentOptions(parent, request.agentOptions, childDepth)
     const agentProvider = agentOptions.provider
     const agentModel = agentOptions.model
@@ -395,6 +402,7 @@ export class SubagentManager {
       mode: 'continuable',
       provider: spec.provider,
       label: spec.label,
+      ...setupKey !== undefined ? { childSetup: setupKey } : {},
       ...agentProvider !== undefined ? { agentProvider } : {},
       ...agentModel !== undefined ? { agentModel } : {},
       ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
@@ -449,6 +457,8 @@ export class SubagentManager {
           },
           agentOptions,
           composition: { agentPreset: request.agentPreset },
+          childSetup: setupKey !== undefined && setupHandler !== undefined && setupData !== undefined
+            ? { key: setupKey, handler: setupHandler, input: { kind: 'startup', data: setupData } } : undefined,
           signal: spec.signal,
           delivery: spec.delivery,
           outputSchema: spec.request.outputSchema,
@@ -894,6 +904,16 @@ export class SubagentManager {
           await workingDirectory.set(child, create.cwd, inputs.signal)
         }
         if (inputs.composition.agentPreset === undefined) await applyChildComposition(childCtx, parent, inputs.composition)
+        if (inputs.childSetup !== undefined) {
+          const { key, handler, input } = inputs.childSetup
+          if (this.host.resolveChildSetup(key) !== handler) {
+            throw new SubagentError(`child setup "${key}" changed during initialization`, 'CHILD_SETUP_UNAVAILABLE')
+          }
+          await handler(childCtx, child, input, inputs.signal)
+          if (this.host.resolveChildSetup(key) !== handler) {
+            throw new SubagentError(`child setup "${key}" changed during initialization`, 'CHILD_SETUP_UNAVAILABLE')
+          }
+        }
         if (inputs.outputSchema !== undefined) {
           structured = attachStructuredRuntime(childCtx, inputs.outputSchema, () =>
             this.resident.get(childId)?.ownedChildren.size === 0
@@ -1373,6 +1393,9 @@ export class SubagentManager {
             : {},
         },
         composition: { agentPreset: agentPreset ?? undefined, persona: descriptor.persona, toolFilter: descriptor.toolFilter },
+        childSetup: descriptor.childSetup === undefined ? undefined : {
+          key: descriptor.childSetup, handler: this.host.resolveChildSetup(descriptor.childSetup), input: { kind: 'resume' },
+        },
         signal: options.signal,
       })
     } catch (error: unknown) {

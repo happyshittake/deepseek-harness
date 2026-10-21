@@ -82,6 +82,8 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 ### Restrict tools per agent
 
+`ctx.tools.restrict(filter, { includeScoped: true })` also filters scope-local capabilities and local shadows in descendants, including later registrations. An explicit empty allow-list denies all end-capability tools. The reserved PTC transport remains available, but its nested calls use the restricted view.
+
 `ctx.tools.restrict(filter)` applies an allow or deny mask to the global tools one agent inherits; masks intersect, scoped registrations stay visible, and the restriction lifts when disposed. `ctx.tools.get(name, scope)` resolves a tool as one scope sees it. A Host-local presenter consumer passes the calling agent when it must match the definition that executed. `ctx.tools.schemas(scope)` returns the visible schemas without the `execute` functions.
 
 ### Enforce policy on calls

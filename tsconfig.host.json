@@ -481,6 +481,7 @@
     { "path": "./packages/experimental/inspector/tsconfig.host.json" },
     { "path": "./packages/subagent/subagent" },
     { "path": "./packages/subagent/tool-subagent" },
+    { "path": "./packages/subagent/tool-subagent-profiles" },
     { "path": "./packages/subagent/tool-subagent-control" },
     { "path": "./packages/subagent/subagent-spawn-in-process" },
     { "path": "./packages/subagent/subagent-fork-in-process" },

@@ -166,13 +166,13 @@ Registration is a trusted same-process contract. The registry borrows the typed 
 
 ```ts type-equiv
 /**
- * Per-scope filter over global tools. Restrictions intersect and do not affect
- * scoped registrations or the reserved PTC mode transport.
+ * Per-scope capability filter. Restrictions intersect; scoped registrations
+ * are exempt by default, and the reserved PTC transport is always exempt.
  */
 interface ToolRestriction {
-  /** Global tool names that stay visible; everything else is removed. */
+  /** Capability names that stay visible; everything else is removed. */
   readonly allow?: readonly string[]
-  /** Global tool names removed from visibility. */
+  /** Capability names removed from visibility. */
   readonly deny?: readonly string[]
 }
 ```
@@ -530,13 +530,14 @@ presentAs(mode: ToolPresentationMode): () => void
 register(definition: ToolDefinition): () => void
 
 /**
- * Restrict global tools for the calling agent scope. Empty filters, unknown
- * names, scope-local names, and reserved transport names fail. Restrictions
- * intersect; scoped registrations remain visible.
- * @param filter - global-tool mask: `allow` (keep only) and/or `deny` (remove).
+ * Restrict inherited capabilities, optionally including scope-local tools.
+ * Empty filters, unknown names, and reserved transport names fail. Restrictions
+ * intersect; scope-local registrations are exempt unless includeScoped is true.
+ * @param filter - capability mask: `allow` (keep only) and/or `deny` (remove).
+ * @param options - whether the mask also covers scope-local registrations.
  * @returns the exact disposer that lifts this restriction.
  */
-restrict(filter: ToolRestriction): () => void
+restrict(filter: ToolRestriction, options?: { readonly includeScoped?: boolean }): () => void
 
 /**
  * Register a monotonic guard after the extensible `tools/pre-execute`

@@ -533,6 +533,7 @@
       "@deepseek-ai/dsh-tool-str-replace-editor": ["./packages/fs/tool-str-replace-editor/src"],
       "@deepseek-ai/dsh-tool-subagent": ["./packages/subagent/tool-subagent/src"],
       "@deepseek-ai/dsh-tool-subagent-control": ["./packages/subagent/tool-subagent-control/src"],
+      "@deepseek-ai/dsh-tool-subagent-profiles": ["./packages/subagent/tool-subagent-profiles/src"],
       "@deepseek-ai/dsh-tool-terminal": ["./packages/experimental/tool-terminal/src"],
       "@deepseek-ai/dsh-tool-todo": ["./packages/todo/tool-todo/src"],
       "@deepseek-ai/dsh-tool-web": ["./packages/web/tool-web/src"],

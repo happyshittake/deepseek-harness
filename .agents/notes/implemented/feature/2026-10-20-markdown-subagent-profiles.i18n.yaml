@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-20-markdown-subagent-profiles.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-20-markdown-subagent-profiles.md
+/agent-note-markdown-subagent-profiles-with-native-model-fallback:
+  en: e981fdea6320e6ad
+  zh: b4df5a7683c1ca7e
+/agent-note-markdown-subagent-profiles-with-native-model-fallback/problem:
+  en: c80fae8812901130
+  zh: 7a3200b10b4023a8
+/agent-note-markdown-subagent-profiles-with-native-model-fallback/decision:
+  en: 673686b5527caa8f
+  zh: 2b819cec539fd9e2
+/agent-note-markdown-subagent-profiles-with-native-model-fallback/alternatives-considered:
+  en: 9166ab68a78cd978
+  zh: ee91a443daba8937
+/agent-note-markdown-subagent-profiles-with-native-model-fallback/consequences:
+  en: 6377679524875bc1
+  zh: 73674244cb26862f

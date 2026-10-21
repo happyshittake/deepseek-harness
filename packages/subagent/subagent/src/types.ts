@@ -9,6 +9,8 @@
  * @module @deepseek-ai/dsh-subagent/types
  */
 
+import type { Context } from '@deepseek-ai/cordis'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { Agent, AgentOptions } from '@deepseek-ai/dsh-agent'
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { ContentBlock, MessageId } from '@deepseek-ai/dsh-llm'
@@ -27,6 +29,29 @@ export function SubagentRunId(id: string): SubagentRunId {
   return id as SubagentRunId
 }
 
+/** Startup data for a registered local child initializer. */
+export interface SubagentChildSetup {
+  /** Stable initializer name required again on cold resume. */
+  readonly key: string
+  /** Detached startup JSON; the initializer persists its own durable records. */
+  readonly data: JsonValue
+}
+
+/**
+ * Initialize an unpublished local child on creation or restoration.
+ * @param childCtx - scoped context retaining setup effects through child teardown.
+ * @param child - unpublished Agent whose own Session stores feature data.
+ * @param input - detached startup JSON, or a request to read previously persisted state.
+ * @param signal - cancellation during native initialization; asynchronous setup must forward it.
+ * @returns after initialization is complete, before the child may be published.
+ */
+export type SubagentChildSetupHandler = (
+  childCtx: Context,
+  child: Agent,
+  input: { readonly kind: 'startup'; readonly data: JsonValue } | { readonly kind: 'resume' },
+  signal: AbortSignal,
+) => void | Promise<void>
+
 /** One managed child execution and its result delivery policy. */
 export interface SubagentActivationSpec {
   /** Registered backend to use. */
@@ -35,6 +60,8 @@ export interface SubagentActivationSpec {
   readonly label: string
   /** Optional reserved identity for a local child; external backends allocate their own ids. */
   readonly childId?: SessionId
+  /** Local child initializer; its key is required on every cold resume. */
+  readonly childSetup?: SubagentChildSetup
   /** Task, parent, and backend-supported execution options. */
   readonly request: Omit<SubagentStartRequest, 'label' | 'signal'>
   /** Cancellation before publication; callers own later cancellation through dispose. */

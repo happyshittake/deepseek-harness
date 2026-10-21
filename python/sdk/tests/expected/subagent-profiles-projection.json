@@ -1,0 +1,103 @@
+{
+  "finalResponse": "REVIEWED",
+  "profileEvents": [
+    {
+      "type": "subagent/descriptor",
+      "seq": 3,
+      "time": 0,
+      "data": {
+        "version": 4,
+        "mode": "continuable",
+        "provider": "spawn",
+        "label": "Review",
+        "childSetup": "markdown-profile"
+      }
+    },
+    {
+      "type": "subagent/profile",
+      "seq": 4,
+      "time": 0,
+      "data": {
+        "name": "reviewer",
+        "description": "Review",
+        "source": "user",
+        "persona": "Review {{literal}}.",
+        "tools": [],
+        "routes": [
+          {
+            "provider": "first",
+            "model": "one"
+          },
+          {
+            "provider": "second",
+            "model": "two"
+          }
+        ]
+      }
+    },
+    {
+      "type": "subagent/profile-route",
+      "seq": 5,
+      "time": 0,
+      "data": {
+        "index": 1
+      }
+    }
+  ],
+  "profileNotifications": [
+    {
+      "method": "session.event",
+      "event": {
+        "type": "subagent/descriptor",
+        "seq": 3,
+        "time": 0,
+        "data": {
+          "version": 4,
+          "mode": "continuable",
+          "provider": "spawn",
+          "label": "Review",
+          "childSetup": "markdown-profile"
+        }
+      }
+    },
+    {
+      "method": "session.event",
+      "event": {
+        "type": "subagent/profile",
+        "seq": 4,
+        "time": 0,
+        "data": {
+          "name": "reviewer",
+          "description": "Review",
+          "source": "user",
+          "persona": "Review {{literal}}.",
+          "tools": [],
+          "routes": [
+            {
+              "provider": "first",
+              "model": "one"
+            },
+            {
+              "provider": "second",
+              "model": "two"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "session.event",
+      "event": {
+        "type": "subagent/profile-route",
+        "seq": 5,
+        "time": 0,
+        "data": {
+          "index": 1
+        }
+      }
+    }
+  ],
+  "assistantTexts": [
+    "REVIEWED"
+  ]
+}
