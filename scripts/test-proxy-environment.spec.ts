@@ -1,7 +1,14 @@
-import { readFileSync } from 'node:fs'
+import { globSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { PROXY_ENV_NAMES } from '../packages/util/http-proxy/src/policy.ts'
-import { clearAmbientProxyEnv, TEST_PROXY_SETUP_FILE, vitestConfigFiles } from './test-proxy-environment.ts'
+import { clearAmbientProxyEnv, TEST_PROXY_SETUP_FILE } from './test-proxy-environment.ts'
+
+// Filesystem discovery belongs to this Node-only wiring test, not the setup
+// module that Vite also loads for jsdom suites.
+function vitestConfigFiles(): string[] {
+  return globSync('vitest*.ts', { cwd: resolve(import.meta.dirname, '..') }).sort()
+}
 
 describe('ambient proxy environment', () => {
   it('clears every name the policy resolver reads, in both casings', () => {
