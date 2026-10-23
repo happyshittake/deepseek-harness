@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Multi-Codex",
+    "description": "Merutekan satu provider multi-codex/<model> ke beberapa akun OAuth ChatGPT Codex dengan percakapan sticky dan failover. Berbagi akun, token, dan reservasi dengan pi; kelola lewat /multi-codex-auth. Termasuk tool multi_codex_image."
+  }
+}

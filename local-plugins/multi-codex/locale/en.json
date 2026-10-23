@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Multi-Codex",
+    "description": "Routes one multi-codex/<model> provider across several ChatGPT Codex OAuth accounts with sticky conversations and failover. Shares accounts, tokens, and reservations with pi; manage with /multi-codex-auth. Includes the multi_codex_image tool."
+  }
+}

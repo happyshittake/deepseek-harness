@@ -1,0 +1,4 @@
+- insert:
+    - id: multi-codex
+      name: '@local/multi-codex'
+      config: {}
