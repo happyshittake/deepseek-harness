@@ -140,6 +140,42 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toEqual([])
   })
 
+  it('accepts uv.lock package byte sizes even when their digits identify a commit', () => {
+    const commit = '1'.repeat(7)
+    const commits = new Set([commit])
+    const checksum = `${commit}${'0'.repeat(57)}`
+    for (const file of ['uv.lock', 'python/sdk/uv.lock']) {
+      for (const source of [
+        `sdist = { url = "https://example.invalid/package.tar.gz", hash = "sha256:${checksum}", size = ${commit} }`,
+        `    { size=${commit}, hash = "sha256:${checksum}" },`,
+      ]) {
+        expect(findRepositoryReferences(file, source, commits)).toEqual([])
+      }
+    }
+  })
+
+  it('still rejects commit references beside uv.lock sizes and outside numeric size fields', () => {
+    const commit = '1'.repeat(7)
+    const commits = new Set([commit])
+    for (const source of [
+      `source = { git = "https://example.invalid/repository#${commit}", size = ${commit} }`,
+      `{ size = ${commit} } # commit ${commit}`,
+      `{ size = "${commit}" }`,
+      `{ revision = ${commit} }`,
+      commit,
+    ]) {
+      expect(findRepositoryReferences('python/sdk/uv.lock', source, commits)).toEqual([
+        { file: 'python/sdk/uv.lock', line: 1, kind: 'commit-hash' },
+      ])
+    }
+    expect(findRepositoryReferences('source.md', `{ size = ${commit} }`, commits)).toEqual([
+      { file: 'source.md', line: 1, kind: 'commit-hash' },
+    ])
+    expect(findRepositoryReferences('python/sdk/uv.lock', `{ size = ${commit}, url = "${organizationUrl}" }`, commits)).toEqual([
+      { file: 'python/sdk/uv.lock', line: 1, kind: 'organization-url' },
+    ])
+  })
+
   it('accepts a prefix that two available commits share and rejects a longer unique prefix', (test) => {
     const fixture = repository(test)
     const [first, second] = collidingCommitBodies(fixture.tree, 7).map(body =>
